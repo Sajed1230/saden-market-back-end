@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Add Product</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f7fa;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .card {
+            background: #fff;
+            padding: 20px 30px;
+            border-radius: 10px;
+            width: 600px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 22px;
+            color: #333;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+            color: #444;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .features input {
+            margin-bottom: 8px;
+        }
+
+        .btn {
+            margin-top: 20px;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background: #05b3a4;
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: #eee;
+            color: #333;
+        }
+
+        .preview {
+            margin-top: 25px;
+            padding: 15px;
+            border: 1px dashed #ccc;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+
+        .preview img {
+            max-width: 200px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #ffebcc;
+            color: #b85b00;
+            border-radius: 5px;
+            margin-left: 10px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+    <%- include('header') %>
+
+        <h1>Add Product</h1>
+
+        <!-- PRODUCT FORM -->
+        <form id="productForm" action="/admin/products" method="POST" enctype="multipart/form-data">
+            <!-- Name -->
+            <label>Product Name</label>
+            <input type="text" name="name" id="name" required />
+
+            <!-- Description -->
+            <label>Description</label>
+            <textarea name="description" id="description" required></textarea>
+
+            <!-- Product Type -->
+            <label>Product Type</label>
+            <select name="type" id="type" required>
+                <option value="">--Select Product Type--</option>
+                <option value="Smartphones">Smartphones</option>
+                <option value="Laptops">Laptops</option>
+                <option value="Audio">Audio</option>
+                <option value="Accessories">Accessories</option>
+                <option value="Wearables">Wearables</option>
+                <option value="Gaming">Gaming</option>
+                <option value="Home Appliances">Home Appliances</option>
+                <option value="Cameras">Cameras</option>
+                <option value="Other">Other</option>
+            </select>
+
+            <!-- Features -->
+            <label>Features (add manually)</label>
+            <div class="features" id="featuresList">
+                <input type="text" name="features[]" placeholder="Feature 1" />
+                <input type="text" name="features[]" placeholder="Feature 2" />
+            </div>
+            <button type="button" class="btn btn-secondary" onclick="addFeature()">+ Add Feature</button>
+
+            <!-- Prices -->
+            <label>Original Price</label>
+            <input type="number" name="originalPrice" id="originalPrice" step="0.01" />
+
+            <label>Current Price</label>
+            <input type="number" name="currentPrice" id="currentPrice" step="0.01" required />
+
+            <!-- Discount (calculated automatically) -->
+            <label>Discount (%)</label>
+            <input type="number" name="discount" id="discount" step="0.01" readonly />
+
+            <!-- Badge -->
+            <label>Badge</label>
+            <input type="text" name="badge" id="badge" placeholder="e.g. New, Hot, Sale" />
+
+            <!-- Image -->
+            <label>Product Image</label>
+            <input type="file" name="image" accept="image/*" onchange="previewImage(event)" />
+
+            <!-- Submit -->
+            <button type="submit" class="btn btn-primary">Save Product</button>
+        </form>
+
+        <!-- LIVE PREVIEW -->
+        <div class="preview">
+            <h3>Preview</h3>
+            <div id="imagePreview">No image</div>
+            <p><strong>Type:</strong> <span id="previewType">—</span></p>
+            <p><strong>Name:</strong> <span id="previewName">—</span> <span id="previewBadge"></span></p>
+            <p><strong>Description:</strong> <span id="previewDesc">—</span></p>
+            <p><strong>Price:</strong> <span id="previewCurrent">—</span> <span id="previewOriginal"
+                    style="text-decoration:line-through; color:#888">—</span> <span id="previewDiscount"></span></p>
+            <p><strong>Features:</strong></p>
+            <ul id="previewFeatures"></ul>
+        </div>
+    </div>
+
+    <script>
+        // Add extra feature input
+        function addFeature() {
+            const list = document.getElementById("featuresList");
+            const input = document.createElement("input");
+            input.type = "text";
+            input.name = "features[]";
+            input.placeholder = "Another feature";
+            list.appendChild(input);
+        }
+
+        // Image preview
+        function previewImage(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById("imagePreview");
+            preview.innerHTML = "";
+            if (file) {
+                const img = document.createElement("img");
+                img.src = URL.createObjectURL(file);
+                preview.appendChild(img);
+            } else {
+                preview.textContent = "No image";
+            }
+        }
+
+        // Update preview as user types
+        const form = document.getElementById("productForm");
+        form.addEventListener("input", updatePreview);
+
+        function updatePreview() {
+            const name = document.getElementById("name").value;
+            const desc = document.getElementById("description").value;
+            const type = document.getElementById("type").value;
+            const original = parseFloat(document.getElementById("originalPrice").value);
+            const current = parseFloat(document.getElementById("currentPrice").value);
+
+            // Calculate discount automatically
+            let discountValue = "";
+            if (!isNaN(original) && !isNaN(current) && original > 0 && current < original) {
+                const discountPercent = Math.round(((original - current) / original) * 100);
+                discountValue = discountPercent + "% OFF";
+                document.getElementById("discount").value = discountPercent;
+            } else {
+                document.getElementById("discount").value = "";
+            }
+
+            const badge = document.getElementById("badge").value;
+
+            // Update preview
+            document.getElementById("previewName").textContent = name;
+            document.getElementById("previewDesc").textContent = desc;
+            document.getElementById("previewType").textContent = type;
+            document.getElementById("previewOriginal").textContent = original ? "$" + original.toFixed(2) : "—";
+            document.getElementById("previewCurrent").textContent = current ? "$" + current.toFixed(2) : "—";
+            document.getElementById("previewDiscount").textContent = discountValue;
+            document.getElementById("previewBadge").textContent = badge ? badge : "";
+
+            // Features
+            const featureInputs = document.querySelectorAll('input[name="features[]"]');
+            const ul = document.getElementById("previewFeatures");
+            ul.innerHTML = "";
+            featureInputs.forEach(f => {
+                if (f.value) {
+                    const li = document.createElement("li");
+                    li.textContent = f.value;
+                    ul.appendChild(li);
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

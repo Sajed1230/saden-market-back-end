@@ -1,0 +1,39 @@
+<!-- header.ejs -->
+<header class="main-header">
+    <nav class="nav-container">
+        <a href="/admin/productForm" class="nav-link">Add Product</a>
+        <a href="/shop/productslist" class="nav-link">Product List</a>
+    </nav>
+</header>
+
+<style>
+    .main-header {
+        padding: 15px 30px;
+        background-color: #05b3a4;
+        color: #fff;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    .nav-container {
+        display: flex;
+        gap: 25px;
+    }
+
+    .nav-link {
+        color: #fff;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 16px;
+        padding: 6px 12px;
+        border-radius: 5px;
+        transition: background 0.3s, color 0.3s;
+    }
+
+    .nav-link:hover {
+        background-color: #fff;
+        color: #05b3a4;
+    }
+</style>
